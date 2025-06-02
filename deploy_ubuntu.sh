@@ -4,10 +4,10 @@
 sudo apt update
 
 # Install Apache, PHP, and required PHP extensions
-sudo apt install -y apache2 php libapache2-mod-php php-mysql php-curl php-mbstring php-zip php-gd php-xml unzip
+sudo apt install -y apache2 php8.1 libapache2-mod-php php-mysql php-curl php-mbstring php-zip php-gd php-xml unzip
 
 # Enable Apache PHP module and restart Apache
-sudo a2enmod php
+sudo a2enmod php8.1
 sudo systemctl restart apache2
 
 # Copy project files to Apache web root
