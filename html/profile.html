@@ -9,14 +9,16 @@
 <body>
   <div class="container">
     <h2>Profile</h2>
-    <form id="profileForm" enctype="multipart/form-data">
+    <form id="emailForm">
       <label for="profileEmail">Change Email</label>
       <input type="email" id="profileEmail" name="email" required />
+      <button type="submit" id="emailSubmitBtn">Change Email</button>
+    </form>
 
+    <form id="avatarForm" enctype="multipart/form-data" style="margin-top: 20px;">
       <label for="profileAvatar">Upload Avatar</label>
       <input type="file" id="profileAvatar" name="avatar" accept="image/*" />
-
-      <button type="submit">Update Profile</button>
+      <button type="submit" id="avatarSubmitBtn">Upload Avatar</button>
     </form>
     <div id="profileMessage" class="message"></div>
     <nav>

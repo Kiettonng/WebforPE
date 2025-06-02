@@ -95,15 +95,13 @@ async function loadAvatar() {
   avatarImg.src = user.avatar + '?t=' + new Date().getTime();
 }
 
-// Profile form submission handler (email change and avatar upload)
-async function handleProfileUpdate(event) {
+// Email change form submission handler
+async function handleEmailChange(event) {
   event.preventDefault();
   const messageEl = document.getElementById('profileMessage');
   hideMessage(messageEl);
 
   const email = document.getElementById('profileEmail').value.trim();
-  const avatarFile = document.getElementById('profileAvatar').files[0];
-  const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
 
   if (!email) {
@@ -112,7 +110,6 @@ async function handleProfileUpdate(event) {
   }
 
   try {
-    // Change email
     const emailResponse = await fetch('/api/change_email.php', {
       method: 'POST',
       headers: { 
@@ -126,30 +123,48 @@ async function handleProfileUpdate(event) {
       showMessage(messageEl, emailData.message || 'Failed to change email.', false);
       return;
     }
+    showMessage(messageEl, 'Email changed successfully.', true);
+  } catch (error) {
+    showMessage(messageEl, 'Error connecting to server.', false);
+  }
+}
 
-    // Upload avatar if file selected
-    if (avatarFile) {
-      const formData = new FormData();
-      formData.append('avatar', avatarFile);
+// Avatar upload form submission handler
+async function handleAvatarUpload(event) {
+  event.preventDefault();
+  const messageEl = document.getElementById('profileMessage');
+  hideMessage(messageEl);
 
-      const avatarResponse = await fetch('/api/upload_avatar.php', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token
-        },
-        body: formData
-      });
-      const avatarData = await avatarResponse.json();
-      if (!avatarResponse.ok || !avatarData.success) {
-        showMessage(messageEl, avatarData.message || 'Failed to upload avatar.', false);
-        return;
-      }
-      // Update user avatar URL
-      user.avatar = avatarData.avatarUrl;
-      localStorage.setItem('user', JSON.stringify(user));
+  const avatarFile = document.getElementById('profileAvatar').files[0];
+  const token = localStorage.getItem('token');
+
+  if (!avatarFile) {
+    showMessage(messageEl, 'Please select an avatar file to upload.', false);
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('avatar', avatarFile);
+
+    const avatarResponse = await fetch('/api/upload_avatar.php', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      },
+      body: formData
+    });
+    const avatarData = await avatarResponse.json();
+    if (!avatarResponse.ok || !avatarData.success) {
+      showMessage(messageEl, avatarData.message || 'Failed to upload avatar.', false);
+      return;
     }
+    // Update user avatar URL
+    const user = JSON.parse(localStorage.getItem('user'));
+    user.avatar = avatarData.avatarUrl;
+    localStorage.setItem('user', JSON.stringify(user));
 
-    showMessage(messageEl, 'Profile updated successfully.', true);
+    showMessage(messageEl, 'Avatar uploaded successfully.', true);
     // Reload avatar image
     loadAvatar();
   } catch (error) {
@@ -206,7 +221,6 @@ function logout() {
   window.location.href = 'login.html';
 }
 
-// On page load, attach event listeners based on page
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
@@ -214,9 +228,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('loginForm')) {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
   }
-  if (document.getElementById('profileForm')) {
-    document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
-    loadAvatar();
+  if (document.getElementById('emailForm')) {
+    document.getElementById('emailForm').addEventListener('submit', handleEmailChange);
+  }
+  if (document.getElementById('avatarForm')) {
+    document.getElementById('avatarForm').addEventListener('submit', handleAvatarUpload);
   }
   if (document.getElementById('passwordForm')) {
     document.getElementById('passwordForm').addEventListener('submit', handleChangePassword);
