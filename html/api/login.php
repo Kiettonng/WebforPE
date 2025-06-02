@@ -20,8 +20,30 @@ if (empty($email) || empty($password)) {
     exit;
 }
 
+<?php
+header('Content-Type: application/json');
+require_once 'db.php';
+
+// Read JSON input
+$input = json_decode(file_get_contents('php://input'), true);
+
+if (!isset($input['email'], $input['password'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+    exit;
+}
+
+$email = trim($input['email']);
+$password = $input['password'];
+
+if (empty($email) || empty($password)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Fields cannot be empty']);
+    exit;
+}
+
 // Find user by email
-$stmt = $pdo->prepare('SELECT id, username, email, password_hash, avatar FROM users WHERE email = ?');
+$stmt = $pdo->prepare('SELECT id, username, email, password_hash, avatar_path FROM users WHERE email = ?');
 $stmt->execute([$email]);
 $user = $stmt->fetch();
 
