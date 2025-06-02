@@ -25,7 +25,13 @@ $stmt = $pdo->prepare('SELECT id, username, email, password_hash, avatar_path FR
 $stmt->execute([$email]);
 $user = $stmt->fetch();
 
-if (!$user || !password_verify($password, $user['password_hash'])) {
+if (!$user) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+    exit;
+}
+
+if (!password_verify($password, $user['password_hash'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
     exit;
