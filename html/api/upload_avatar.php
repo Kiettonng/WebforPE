@@ -1,67 +1,53 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Content-Type: application/json; charset=UTF-8");
+header('Content-Type: application/json');
+require_once 'db.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
-require_once __DIR__ . '/db.php';
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
+// Simple token check (for demo purposes)
+$headers = getallheaders();
+if (!isset($headers['Authorization'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized. Please login.']);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+$token = str_replace('Bearer ', '', $headers['Authorization']);
+
+// For demo, token is not validated properly
+
+// Get user id from token (not implemented, so assume user id 1)
+$user_id = 1;
+
+// Check if file uploaded
+if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'No file uploaded or upload error']);
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_FILES['avatar'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'No avatar file provided.']);
-        exit;
-    }
-
-    $file = $_FILES['avatar'];
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        http_response_code(400);
-        echo json_encode(['error' => 'File upload error: ' . $file['error']]);
-        exit;
-    }
-
-    // Đảm bảo thư mục uploads/avatars tồn tại trong DocumentRoot
-    $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/';
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-    }
-
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'user' . $user_id . '_' . time() . '.' . $ext;
-    $full_path = $upload_dir . $filename;
-    $web_path = '/uploads/avatars/' . $filename;
-
-    if (move_uploaded_file($file['tmp_name'], $full_path)) {
-        $pdo = getPDO();
-        $stmt = $pdo->prepare("UPDATE users SET avatar_path = :avatar_path WHERE id = :user_id");
-        $stmt->bindParam(':avatar_path', $web_path);
-        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        echo json_encode([
-            'message' => 'Avatar uploaded successfully!',
-            'avatar_url' => $web_path
-        ]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to upload file.']);
-    }
-} else {
-    http_response_code(405);
-    echo json_encode(['error' => 'Only POST method is allowed.']);
+// Vulnerable: no proper file validation
+$uploadDir = __DIR__ . '/../uploads/';
+if (!is_dir($uploadDir)) {
+    mkdir($uploadDir, 0755, true);
 }
+
+$filename = basename($_FILES['avatar']['name']);
+$targetFile = $uploadDir . $filename;
+
+if (!move_uploaded_file($_FILES['avatar']['tmp_name'], $targetFile)) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Failed to move uploaded file']);
+    exit;
+}
+
+// Save avatar path in database
+$avatarUrl = '/uploads/' . $filename;
+$stmt = $pdo->prepare('UPDATE users SET avatar = ? WHERE id = ?');
+$stmt->execute([$avatarUrl, $user_id]);
+
+// Log avatar upload
+$ip = $_SERVER['REMOTE_ADDR'] ?? '';
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$logStmt = $pdo->prepare('INSERT INTO logs (user_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)');
+$logStmt->execute([$user_id, 'Avatar uploaded', $ip, $ua]);
+
+echo json_encode(['success' => true, 'message' => 'Avatar uploaded', 'avatarUrl' => $avatarUrl]);
 ?>

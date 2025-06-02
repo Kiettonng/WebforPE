@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Profile</h2>
+    <form id="profileForm" enctype="multipart/form-data">
+      <label for="profileEmail">Change Email</label>
+      <input type="email" id="profileEmail" name="email" required />
+
+      <label for="profileAvatar">Upload Avatar</label>
+      <input type="file" id="profileAvatar" name="avatar" accept="image/*" />
+
+      <button type="submit">Update Profile</button>
+    </form>
+    <div id="profileMessage" class="message"></div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="change_password.html">Change Password</a>
+      <a href="#" id="logoutBtn">Logout</a>
+    </nav>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
