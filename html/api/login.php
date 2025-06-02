@@ -49,7 +49,7 @@ echo json_encode([
         'id' => $user['id'],
         'username' => $user['username'],
         'email' => $user['email'],
-        'avatar' => $user['avatar'] ?? null
+        'avatar' => $user['avatar_path'] ?? null
     ]
 ]);
 ?>

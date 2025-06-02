@@ -40,7 +40,7 @@ if (!move_uploaded_file($_FILES['avatar']['tmp_name'], $targetFile)) {
 
 // Save avatar path in database
 $avatarUrl = '/uploads/' . $filename;
-$stmt = $pdo->prepare('UPDATE users SET avatar = ? WHERE id = ?');
+$stmt = $pdo->prepare('UPDATE users SET avatar_path = ? WHERE id = ?');
 $stmt->execute([$avatarUrl, $user_id]);
 
 // Log avatar upload
